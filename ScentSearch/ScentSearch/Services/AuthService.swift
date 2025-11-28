@@ -64,9 +64,11 @@ class AuthService {
         // Simulate network delay for MVP
         try await Task.sleep(nanoseconds: 500_000_000)
         
-        // Create user (MVP: local storage, will be replaced with Firebase)
+        // Create user with deterministic ID based on email to preserve data
+        let deterministicId = email.lowercased().data(using: .utf8)?.base64EncodedString() ?? UUID().uuidString
+        
         let user = AuthUser(
-            id: UUID().uuidString,
+            id: deterministicId,
             email: email,
             displayName: displayName,
             provider: .email
@@ -92,10 +94,12 @@ class AuthService {
         // Simulate network delay
         try await Task.sleep(nanoseconds: 500_000_000)
         
-        // For MVP, we just create/restore the session
-        // In production, this would verify with Firebase
+        // For MVP, use a deterministic ID based on email to preserve data across sessions
+        // This ensures the same email always gets the same user ID
+        let deterministicId = email.lowercased().data(using: .utf8)?.base64EncodedString() ?? UUID().uuidString
+        
         let user = AuthUser(
-            id: UUID().uuidString,
+            id: deterministicId,
             email: email,
             displayName: nil,
             provider: .email

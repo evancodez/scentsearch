@@ -72,13 +72,23 @@ struct Fragrance: Codable, Identifiable, Hashable {
         }
     }
     
-    // Check if fragrance matches a gender filter
+    // Check if fragrance matches a single gender filter
     func matchesGender(_ filter: FragranceGender) -> Bool {
         // "All" always matches
         if filter == .all { return true }
         // If no gender data, show in all categories (don't hide fragrances)
         guard let category = genderCategory else { return true }
         return category == filter
+    }
+    
+    // Check if fragrance matches any of the selected gender filters (multi-select)
+    func matchesGenders(_ filters: Set<FragranceGender>) -> Bool {
+        // Empty set or "All" selected = show everything
+        if filters.isEmpty || filters.contains(.all) { return true }
+        // If no gender data, show in all categories
+        guard let category = genderCategory else { return true }
+        // Check if fragrance's gender matches any selected filter
+        return filters.contains(category)
     }
     
     enum CodingKeys: String, CodingKey {

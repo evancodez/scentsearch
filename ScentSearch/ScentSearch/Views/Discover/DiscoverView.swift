@@ -15,7 +15,7 @@ struct DiscoverView: View {
     @State private var currentIndex = 0
     @State private var showingDetail = false
     @State private var selectedFragrance: Fragrance?
-    @State private var selectedGender: FragranceGender = .all
+    @State private var selectedGenders: Set<FragranceGender> = [.all]
     @State private var showingResetAlert = false
     
     var body: some View {
@@ -26,9 +26,9 @@ struct DiscoverView: View {
                     .ignoresSafeArea()
                 
                 VStack(spacing: 16) {
-                    // Gender Filter - always show
+                    // Multi-select Gender Filter
                     ScrollView(.horizontal, showsIndicators: false) {
-                        GenderFilterBar(selected: $selectedGender)
+                        MultiSelectGenderFilter(selectedGenders: $selectedGenders)
                             .padding(.horizontal)
                     }
                     
@@ -116,19 +116,24 @@ struct DiscoverView: View {
                 Text("This will reset all passed fragrances so you can see them again in discovery.")
             }
         }
-        .onAppear {
-            if cardQueue.isEmpty {
+        .task {
+            // Wait for fragrances to be loaded
+            await fragranceService.loadFragrances()
+            // Now refresh the queue
+            refreshQueue()
+        }
+        .onChange(of: selectedGenders) { _, _ in
+            // Only refresh if fragrances are loaded
+            if !fragranceService.fragrances.isEmpty {
                 refreshQueue()
             }
-        }
-        .onChange(of: selectedGender) { _, _ in
-            refreshQueue()
         }
     }
     
     private func refreshQueue() {
+        guard !fragranceService.fragrances.isEmpty else { return }
         let seenIds = userService.getSeenFragranceIds()
-        cardQueue = fragranceService.getDiscoveryQueue(excluding: seenIds, limit: 20, gender: selectedGender)
+        cardQueue = fragranceService.getDiscoveryQueue(excluding: seenIds, limit: 20, genders: selectedGenders)
     }
     
     private func resetDiscovery() {
@@ -160,7 +165,7 @@ struct DiscoverView: View {
             // Load more cards if running low
             if cardQueue.count < 5 {
                 let seenIds = userService.getSeenFragranceIds()
-                let newCards = fragranceService.getDiscoveryQueue(excluding: seenIds, limit: 10)
+                let newCards = fragranceService.getDiscoveryQueue(excluding: seenIds, limit: 10, genders: selectedGenders)
                 cardQueue.append(contentsOf: newCards)
             }
         }

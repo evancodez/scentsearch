@@ -19,6 +19,8 @@ class UserService {
     
     private init() {
         loadLocalProfile()
+        // Auto-create local profile if none exists
+        ensureProfileExists()
     }
     
     // MARK: - Profile Management
@@ -28,6 +30,22 @@ class UserService {
            let profile = try? JSONDecoder().decode(UserProfile.self, from: data) {
             currentProfile = profile
         }
+    }
+    
+    private func ensureProfileExists() {
+        if currentProfile == nil {
+            createLocalGuestProfile()
+        }
+    }
+    
+    private func createLocalGuestProfile() {
+        let profile = UserProfile(
+            id: "local-\(UUID().uuidString)",
+            email: "guest@local",
+            displayName: "Guest"
+        )
+        currentProfile = profile
+        saveLocalProfile()
     }
     
     private func saveLocalProfile() {

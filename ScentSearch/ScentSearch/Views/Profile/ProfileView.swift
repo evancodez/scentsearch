@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct ProfileView: View {
+    @Environment(\.selectedTab) var selectedTab
     @State private var authService = AuthService.shared
     @State private var userService = UserService.shared
     @State private var fragranceService = FragranceService.shared
@@ -16,6 +17,7 @@ struct ProfileView: View {
     @State private var showingSettings = false
     @State private var showingSignatureSelector = false
     @State private var showingTopFiveEditor = false
+    @State private var showingReviews = false
     
     private var profile: UserProfile? {
         userService.currentProfile
@@ -35,11 +37,14 @@ struct ProfileView: View {
                             email: profile?.email ?? ""
                         )
                         
-                        // Stats
+                        // Stats - Now tappable
                         StatsRow(
                             collectionCount: profile?.collectionCount ?? 0,
                             wishlistCount: profile?.wishlistCount ?? 0,
-                            reviewCount: reviewService.getUserReviews().count
+                            reviewCount: reviewService.getUserReviews().count,
+                            onCollectionTap: { selectedTab.wrappedValue = AppTab.collection.rawValue },
+                            onWishlistTap: { selectedTab.wrappedValue = AppTab.collection.rawValue },
+                            onReviewsTap: { showingReviews = true }
                         )
                         
                         // Signature Scent
@@ -85,6 +90,13 @@ struct ProfileView: View {
             }
             .sheet(isPresented: $showingTopFiveEditor) {
                 TopFiveEditorView()
+            }
+            .sheet(isPresented: $showingReviews) {
+                UserReviewsView()
+            }
+            .task {
+                // Wait for fragrances to be loaded
+                await fragranceService.loadFragrances()
             }
         }
     }
@@ -133,22 +145,25 @@ struct StatsRow: View {
     let collectionCount: Int
     let wishlistCount: Int
     let reviewCount: Int
+    var onCollectionTap: (() -> Void)?
+    var onWishlistTap: (() -> Void)?
+    var onReviewsTap: (() -> Void)?
     
     var body: some View {
         HStack(spacing: 0) {
-            StatItem(value: collectionCount, label: "Collection", icon: "drop.fill")
+            StatItem(value: collectionCount, label: "Collection", icon: "drop.fill", action: onCollectionTap)
             
             Divider()
                 .frame(height: 40)
                 .background(Color.scentTextMuted.opacity(0.3))
             
-            StatItem(value: wishlistCount, label: "Wishlist", icon: "heart.fill")
+            StatItem(value: wishlistCount, label: "Wishlist", icon: "heart.fill", action: onWishlistTap)
             
             Divider()
                 .frame(height: 40)
                 .background(Color.scentTextMuted.opacity(0.3))
             
-            StatItem(value: reviewCount, label: "Reviews", icon: "star.fill")
+            StatItem(value: reviewCount, label: "Reviews", icon: "star.fill", action: onReviewsTap)
         }
         .padding(.vertical, 16)
         .background(Color.scentSurface)
@@ -161,25 +176,31 @@ struct StatItem: View {
     let value: Int
     let label: String
     let icon: String
+    var action: (() -> Void)?
     
     var body: some View {
-        VStack(spacing: 6) {
-            HStack(spacing: 4) {
-                Image(systemName: icon)
-                    .font(.caption)
-                    .foregroundColor(.scentAmber)
+        Button {
+            action?()
+        } label: {
+            VStack(spacing: 6) {
+                HStack(spacing: 4) {
+                    Image(systemName: icon)
+                        .font(.caption)
+                        .foregroundColor(.scentAmber)
+                    
+                    Text("\(value)")
+                        .font(.scentTitle3)
+                        .fontWeight(.bold)
+                        .foregroundColor(.scentTextPrimary)
+                }
                 
-                Text("\(value)")
-                    .font(.scentTitle3)
-                    .fontWeight(.bold)
-                    .foregroundColor(.scentTextPrimary)
+                Text(label)
+                    .font(.scentCaption2)
+                    .foregroundColor(.scentTextMuted)
             }
-            
-            Text(label)
-                .font(.scentCaption2)
-                .foregroundColor(.scentTextMuted)
+            .frame(maxWidth: .infinity)
         }
-        .frame(maxWidth: .infinity)
+        .buttonStyle(.plain)
     }
 }
 

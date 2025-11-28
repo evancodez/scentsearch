@@ -12,10 +12,10 @@ struct SearchView: View {
     @State private var searchText = ""
     @State private var searchResults: [Fragrance] = []
     @State private var isSearching = false
-    @State private var selectedGender: FragranceGender = .all
+    @State private var selectedGenders: Set<FragranceGender> = [.all]
     
     private var filteredResults: [Fragrance] {
-        return searchResults.filter { $0.matchesGender(selectedGender) }
+        return searchResults.filter { $0.matchesGenders(selectedGenders) }
     }
     
     var body: some View {
@@ -24,34 +24,52 @@ struct SearchView: View {
                 Color.scentBackground
                     .ignoresSafeArea()
                 
-                ScrollView {
+                if fragranceService.isLoading {
                     VStack(spacing: 16) {
-                        // Search Bar
-                        SearchBar(text: $searchText, isSearching: $isSearching)
-                            .padding(.horizontal)
-                        
-                        // Gender Filter
-                        ScrollView(.horizontal, showsIndicators: false) {
-                            GenderFilterBar(selected: $selectedGender)
-                                .padding(.horizontal)
-                        }
-                        
-                        if !searchText.isEmpty {
-                            // Search Results
-                            SearchResultsView(results: filteredResults)
-                        } else {
-                            // Browse by Brand
-                            BrandListView()
-                        }
+                        ProgressView()
+                            .tint(.scentAmber)
+                            .scaleEffect(1.5)
+                        Text("Loading fragrances...")
+                            .font(.scentBody)
+                            .foregroundColor(.scentTextSecondary)
                     }
-                    .padding(.top, 8)
+                } else {
+                    ScrollView {
+                        VStack(spacing: 16) {
+                            // Search Bar
+                            SearchBar(text: $searchText, isSearching: $isSearching)
+                                .padding(.horizontal)
+                            
+                            // Multi-select Gender Filter
+                            ScrollView(.horizontal, showsIndicators: false) {
+                                MultiSelectGenderFilter(selectedGenders: $selectedGenders)
+                                    .padding(.horizontal)
+                            }
+                            
+                            if !searchText.isEmpty {
+                                // Search Results
+                                SearchResultsView(results: filteredResults)
+                            } else {
+                                // Browse by Brand
+                                BrandListView()
+                            }
+                        }
+                        .padding(.top, 8)
+                    }
                 }
             }
             .navigationTitle("Search")
             .navigationBarTitleDisplayMode(.large)
         }
+        .task {
+            // Wait for fragrances to be loaded
+            await fragranceService.loadFragrances()
+        }
         .onChange(of: searchText) { _, newValue in
             performSearch(query: newValue)
+        }
+        .onChange(of: selectedGenders) { _, _ in
+            performSearch(query: searchText)
         }
     }
     
@@ -59,7 +77,7 @@ struct SearchView: View {
         if query.isEmpty {
             searchResults = []
         } else {
-            searchResults = fragranceService.search(query: query)
+            searchResults = fragranceService.search(query: query, genders: selectedGenders)
         }
     }
 }

@@ -29,22 +29,9 @@
 		84BCAE382ED9197F00B60662 /* ScentSearchUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ScentSearchUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
-/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		84BCAE912ED93DCB00B60662 /* Exceptions for "ScentSearch" folder in "ScentSearch" target */ = {
-			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
-			membershipExceptions = (
-				fragrance_database.json,
-			);
-			target = 84BCAE202ED9197C00B60662 /* ScentSearch */;
-		};
-/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
-
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		84BCAE232ED9197C00B60662 /* ScentSearch */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-				84BCAE912ED93DCB00B60662 /* Exceptions for "ScentSearch" folder in "ScentSearch" target */,
-			);
 			path = ScentSearch;
 			sourceTree = "<group>";
 		};

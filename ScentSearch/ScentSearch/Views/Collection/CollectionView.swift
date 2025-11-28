@@ -27,41 +27,52 @@ struct CollectionView: View {
                 Color.scentBackground
                     .ignoresSafeArea()
                 
-                VStack(spacing: 0) {
-                    // Segmented Control
-                    HStack(spacing: 0) {
-                        SegmentButton(
-                            title: "Collection",
-                            count: userService.currentProfile?.collection.count ?? 0,
-                            isSelected: selectedTab == 0
-                        ) {
-                            withAnimation(.easeInOut(duration: 0.2)) {
-                                selectedTab = 0
+                if fragranceService.isLoading {
+                    VStack(spacing: 16) {
+                        ProgressView()
+                            .tint(.scentAmber)
+                            .scaleEffect(1.5)
+                        Text("Loading fragrances...")
+                            .font(.scentBody)
+                            .foregroundColor(.scentTextSecondary)
+                    }
+                } else {
+                    VStack(spacing: 0) {
+                        // Segmented Control
+                        HStack(spacing: 0) {
+                            SegmentButton(
+                                title: "Collection",
+                                count: userService.currentProfile?.collection.count ?? 0,
+                                isSelected: selectedTab == 0
+                            ) {
+                                withAnimation(.easeInOut(duration: 0.2)) {
+                                    selectedTab = 0
+                                }
+                            }
+                            
+                            SegmentButton(
+                                title: "Wishlist",
+                                count: userService.currentProfile?.wishlist.count ?? 0,
+                                isSelected: selectedTab == 1
+                            ) {
+                                withAnimation(.easeInOut(duration: 0.2)) {
+                                    selectedTab = 1
+                                }
                             }
                         }
+                        .padding(.horizontal)
+                        .padding(.top, 8)
                         
-                        SegmentButton(
-                            title: "Wishlist",
-                            count: userService.currentProfile?.wishlist.count ?? 0,
-                            isSelected: selectedTab == 1
-                        ) {
-                            withAnimation(.easeInOut(duration: 0.2)) {
-                                selectedTab = 1
-                            }
+                        // Content
+                        TabView(selection: $selectedTab) {
+                            CollectionGridView()
+                                .tag(0)
+                            
+                            WishlistGridView()
+                                .tag(1)
                         }
+                        .tabViewStyle(.page(indexDisplayMode: .never))
                     }
-                    .padding(.horizontal)
-                    .padding(.top, 8)
-                    
-                    // Content
-                    TabView(selection: $selectedTab) {
-                        CollectionGridView()
-                            .tag(0)
-                        
-                        WishlistGridView()
-                            .tag(1)
-                    }
-                    .tabViewStyle(.page(indexDisplayMode: .never))
                 }
             }
             .navigationTitle(selectedTab == 0 ? "My Collection" : "Wishlist")
@@ -101,6 +112,10 @@ struct CollectionView: View {
                 Text(selectedTab == 0 
                      ? "This will remove all fragrances from your collection. This cannot be undone."
                      : "This will remove all fragrances from your wishlist. This cannot be undone.")
+            }
+            .task {
+                // Wait for fragrances to be loaded
+                await fragranceService.loadFragrances()
             }
         }
     }
