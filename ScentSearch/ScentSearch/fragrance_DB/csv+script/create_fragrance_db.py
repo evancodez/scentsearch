@@ -35,6 +35,7 @@ def main():
             fragrance = {
                 'brand': row.get('Brand', ''),
                 'name': row.get('Perfume', '').replace('-', ' ').title(),
+                'gender': row.get('Gender', '').lower(),
                 'notes': {
                     'top': parse_notes(row.get('Top', '')),
                     'middle': parse_notes(row.get('Middle', '')),
