@@ -55,8 +55,8 @@ class FragranceService {
                     url = bundleUrl
                     print("FragranceService: Found in bundle at \(bundleUrl)")
                 }
-
-\                // If not in bundle, try the app's documents or source location
+                
+                // If not in bundle, try the app's documents or source location
                 if url == nil {
                     // For development, try source directory
                     let sourceUrl = URL(fileURLWithPath: #file)
